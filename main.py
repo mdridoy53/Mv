@@ -4,11 +4,11 @@ import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 # Replace 'YOUR_BOT_TOKEN' with your actual bot token
-BOT_TOKEN = '7748338477:AAFWxhf4X9hSPbBrNfW7e7wvcV4qqonR22k'
+BOT_TOKEN = '7913586877:AAGI6BJqvRnSVBrLwMsHjNQUc0WKGS7aKzw'
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # Replace with your admin user ID(s)
-ADMIN_USER_IDS = [7987662357,7707004318]  # Replace with your admin user ID
+ADMIN_USER_IDS = [7987662357]  # Replace with your admin user ID
 
 # In-memory user data (replace with a database for persistence)
 user_data = {}
@@ -38,7 +38,7 @@ proxy_add_state = {}
 
 def create_main_keyboard():
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    keyboard.add("Add 👤 Account", "Joine Update Bot Channels", "Add Balance", "Complete All Tasks", "Buy Proxy", "Daily Claim", "/premium")
+    keyboard.add("Add 👤 Account", "💌 Invite", "Add Balance", "Complete All Tasks", "Buy Proxy", "Daily Claim", "/premium")
     return keyboard
 
 def create_proxy_keyboard():
