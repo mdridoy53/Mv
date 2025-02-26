@@ -2,10 +2,9 @@ import telebot
 import random
 import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-import time
 
 # Replace 'YOUR_BOT_TOKEN' with your actual bot token
-BOT_TOKEN = '7720695132:AAFg6E_Bh3OXs6aqhOPGVee3X9UoiqwD9qQ'
+BOT_TOKEN = '7913586877:AAGI6BJqvRnSVBrLwMsHjNQUc0WKGS7aKzw'
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # Replace with your admin user ID(s)
@@ -13,6 +12,16 @@ ADMIN_USER_IDS = [7987662357]  # Replace with your admin user ID
 
 # In-memory user data (replace with a database for persistence)
 user_data = {}
+proxy_data = {
+    "1": {
+        "IP": "188.245.189.170",
+        "Port": "44366",
+        "User": "DAvzDk",
+        "Password": "0e7y53",
+        "Country": "USA",
+        "Price": 2,  # Price in credits
+    }
+}
 tasks = {
     "1": {"link": "https://t.me/+h5cW8Gja49JkNWU1", "credits": 2, "description": "Join Channel"},
     "2": {"link": "https://www.effectiveratecpm.com/f7hrpvm2?key=fb69a6ec1f987419560a7f5abcb1f8a3", "credits": 5, "description": "Ads Click"},
@@ -22,17 +31,20 @@ tasks = {
 daily_claim_credits = 10  # Example daily claim amount
 last_daily_claim = {}  # Store last claim time for each user
 
+# State for adding new proxies
+proxy_add_state = {}
+
 # Keyboard functions
 
 def create_main_keyboard():
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    keyboard.add("Add 👤 Account", "💌 Invite", "Add Balance", "Complete All Tasks", "Buy Proxy", "Daily Claim", "/premium")
+    keyboard.add("Add 👤 Account", "Joine Update Bot Channels", "Add Balance", "Complete All Tasks", "Buy Proxy", "Daily Claim", "/premium")
     return keyboard
 
-def create_task_keyboard():
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    for task_id, task_info in tasks.items():
-        keyboard.add(InlineKeyboardButton(f"Task {task_id}: {task_info['description']} (Earn {task_info['credits']} credits)", callback_data=f"task_{task_id}"))
+def create_proxy_keyboard():
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    for proxy_id in proxy_data:
+        keyboard.add(telebot.types.InlineKeyboardButton(f"Proxy {proxy_id}", callback_data=f"buy_proxy_{proxy_id}"))
     return keyboard
 
 def check_user(message):
@@ -62,25 +74,33 @@ def complete_all_tasks(message):
     if len(tasks) == len(user_data[user_id]["tasks_completed"]):
         bot.send_message(user_id, "You have already completed all tasks!")
     else:
-        bot.send_message(user_id, "Checking, please wait for 20 seconds...")
-        time.sleep(20)  # Simulate 20 seconds waiting
         total_credits = 0
         for task_id, task_info in tasks.items():
             if task_id not in user_data[user_id]["tasks_completed"]:
                 total_credits += task_info["credits"]
                 user_data[user_id]["tasks_completed"].add(task_id)
         user_data[user_id]["credits"] += total_credits
-        bot.send_message(user_id, f"You completed all tasks and earned {total_credits} credits! Your total balance is: {user_data[user_id]['credits']} credits.")
+        bot.send_message(user_id, f"You Task Joine Now = https://t.me/+h5cW8Gja49JkNWU1 completed all tasks and earned {total_credits} credits! Your total balance is: {user_data[user_id]['credits']} credits.")
 
 @bot.message_handler(func=lambda message: message.text == "Buy Proxy")
 def buy_proxy(message):
     user_id = check_user(message)
-    bot.send_message(user_id, "Select a proxy:", reply_markup=create_task_keyboard())
+    bot.send_message(user_id, "Select a proxy:", reply_markup=create_proxy_keyboard())
 
-@bot.message_handler(func=lambda message: message.text == "Show Tasks")
-def show_tasks(message):
-    user_id = check_user(message)
-    bot.send_message(user_id, "Choose a task:", reply_markup=create_task_keyboard())
+@bot.callback_query_handler(func=lambda call: call.data.startswith("buy_proxy_"))
+def buy_proxy_callback(call):
+    user_id = call.from_user.id
+    proxy_id = call.data.split("_")[2]
+    if proxy_id in proxy_data:
+        proxy = proxy_data[proxy_id]
+        if user_data[user_id]["credits"] >= proxy["Price"]:
+            user_data[user_id]["credits"] -= proxy["Price"]
+            proxy_info = f"Proxy Information:\nIP: {proxy['IP']}\nPort: {proxy['Port']}\nUser: {proxy['User']}\nPassword: {proxy['Password']}\nCountry: {proxy['Country']}"
+            bot.send_message(user_id, proxy_info)
+            bot.send_message(user_id, f"You bought Proxy {proxy_id} for {proxy['Price']} credits. Your balance is now: {user_data[user_id]['credits']} credits.")
+        else:
+            bot.send_message(user_id, "Insufficient credits.")
+    bot.answer_callback_query(call.id)
 
 @bot.message_handler(func=lambda message: message.text == "Add Balance")
 def add_balance(message):
@@ -115,22 +135,45 @@ def add_account(message):
     user_id = check_user(message)
     bot.send_message(user_id, "Please contact @darkkkjht to add an account.")  # Replace with your admin's username
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith("task_"))
-def handle_task(call):
-    user_id = call.from_user.id
-    task_id = call.data.split("_")[1]
-    if task_id not in user_data[user_id]["tasks_completed"]:
-        task_info = tasks.get(task_id)
-        if task_info:
-            user_data[user_id]["credits"] += task_info["credits"]
-            user_data[user_id]["tasks_completed"].add(task_id)
-            bot.send_message(user_id, f"You have completed the task '{task_info['description']}' and earned {task_info['credits']} credits!")
-            bot.send_message(user_id, f"Your current balance is {user_data[user_id]['credits']} credits.")
-        else:
-            bot.send_message(user_id, "Task not found.")
+@bot.message_handler(commands=['new'])
+def new_proxy_command(message):
+    user_id = message.from_user.id
+    if user_id in ADMIN_USER_IDS:
+        proxy_add_state[user_id] = {}  # Initialize state for this user
+        bot.send_message(user_id, "Enter the proxy IP:")
     else:
-        bot.send_message(user_id, "You have already completed this task.")
-    bot.answer_callback_query(call.id)
+        bot.send_message(user_id, "You are not authorized to use this command.")
+
+@bot.message_handler(func=lambda message: message.from_user.id in proxy_add_state)
+def process_new_proxy_info(message):
+    user_id = message.from_user.id
+    if "IP" not in proxy_add_state[user_id]:
+        proxy_add_state[user_id]["IP"] = message.text
+        bot.send_message(user_id, "Enter the proxy Port:")
+    elif "Port" not in proxy_add_state[user_id]:
+        proxy_add_state[user_id]["Port"] = message.text
+        bot.send_message(user_id, "Enter the proxy Username:")
+    elif "User" not in proxy_add_state[user_id]:
+        proxy_add_state[user_id]["User"] = message.text
+        bot.send_message(user_id, "Enter the proxy Password:")
+    elif "Password" not in proxy_add_state[user_id]:
+        proxy_add_state[user_id]["Password"] = message.text
+        bot.send_message(user_id, "Enter the proxy Country:")
+    elif "Country" not in proxy_add_state[user_id]:
+        proxy_add_state[user_id]["Country"] = message.text
+        bot.send_message(user_id, "Enter the proxy Price (in credits):")
+    elif "Price" not in proxy_add_state[user_id]:
+        try:
+            proxy_add_state[user_id]["Price"] = int(message.text)
+            # Add the new proxy to proxy_data
+            new_proxy_id = str(len(proxy_data) + 1)  # Simple ID generation
+            proxy_data[new_proxy_id] = proxy_add_state[user_id]
+            bot.send_message(user_id, f"Proxy added successfully with ID: {new_proxy_id}")
+            del proxy_add_state[user_id]  # Clear the state
+        except ValueError:
+            bot.send_message(user_id, "Invalid price. Please enter a number.")
+
+# Admin Commands
 
 @bot.message_handler(commands=['show_users'])
 def show_users(message):
@@ -140,6 +183,21 @@ def show_users(message):
         bot.send_message(user_id, f"Users: \n{user_list}")
     else:
         bot.send_message(user_id, "You are not authorized to use this command.")
+
+@bot.message_handler(commands=['show_notifications'])
+def show_notifications(message):
+    user_id = message.from_user.id
+    if user_id in ADMIN_USER_IDS:
+        bot.send_message(user_id, "Enter the message to send to all users:")
+        bot.register_next_step_handler(message, send_notification)
+    else:
+        bot.send_message(user_id, "You are not authorized to use this command.")
+
+def send_notification(message):
+    notification_text = message.text
+    for user_id in user_data.keys():
+        bot.send_message(user_id, notification_text)
+    bot.send_message(message.from_user.id, "Notification sent to all users.")
 
 @bot.message_handler(commands=['show_total_users'])
 def show_total_users(message):
