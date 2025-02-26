@@ -4,7 +4,7 @@ import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 # Replace 'YOUR_BOT_TOKEN' with your actual bot token
-BOT_TOKEN = '7913586877:AAGI6BJqvRnSVBrLwMsHjNQUc0WKGS7aKzw'
+BOT_TOKEN = '7913586877:AAERsnpgde4yGphlpEZqjmo53kFKWoaEVVg'
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # Replace with your admin user ID(s)
