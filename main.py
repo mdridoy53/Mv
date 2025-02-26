@@ -34,9 +34,11 @@ last_daily_claim = {}  # Store last claim time for each user
 # State for adding new proxies
 proxy_add_state = {}
 
+# Keyboard functions
+
 def create_main_keyboard():
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    keyboard.add("Add 👤 Account", "💌 Invite", "Add Balance", "", "Buy Proxy", "Daily Claim", "Show Task", "/premium")
+    keyboard.add("Add 👤 Account", "💌 Invite", "Add Balance", "Complete All Tasks", "Buy Proxy", "Daily Claim", "/premium")
     return keyboard
 
 def create_proxy_keyboard():
@@ -51,6 +53,8 @@ def check_user(message):
         user_data[user_id] = {"credits": 0, "tasks_completed": set(), "premium": False}
     return user_id
 
+# Bot commands
+
 @bot.message_handler(commands=['start'])
 def start(message):
     user_id = check_user(message)
@@ -64,35 +68,19 @@ def premium(message):
     else:
         bot.send_message(user_id, "You are not a Premium User. Contact admin to get premium access.")
 
-@bot.message_handler(func=lambda message: message.text == "Income Credits✅")
-def income_credits(message):
+@bot.message_handler(func=lambda message: message.text == "Complete All Tasks")
+def complete_all_tasks(message):
     user_id = check_user(message)
-    task_keyboard = telebot.types.InlineKeyboardMarkup()
-    for task_id, task_info in tasks.items():
-        task_keyboard.add(telebot.types.InlineKeyboardButton(task_info["description"], callback_data=f"task_{task_id}"))
-    bot.send_message(user_id, "Choose a task:", reply_markup=task_keyboard)
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith("task_"))
-def task_callback(call):
-    user_id = call.from_user.id
-    task_id = call.data.split("_")[1]  # Get the task ID
-    if task_id in tasks:
-        if task_id not in user_data[user_id]["tasks_completed"]:
-            user_data[user_id]["credits"] += tasks[task_id]["credits"]
-            user_data[user_id]["tasks_completed"].add(task_id)
-            bot.send_message(user_id, f"You earned {tasks[task_id]['credits']} credits!")
-            bot.send_message(user_id, f"Your current balance is: {user_data[user_id]['credits']} credits.")
-        else:
-            bot.send_message(user_id, "You've already completed this task.")
-    bot.answer_callback_query(call.id)
-
-@bot.message_handler(func=lambda message: message.text == "Show Task")
-def show_task(message):
-    user_id = check_user(message)
-    task_keyboard = telebot.types.InlineKeyboardMarkup()
-    for task_id, task_info in tasks.items():
-        task_keyboard.add(telebot.types.InlineKeyboardButton(task_info["description"], url=task_info["link"]))
-    bot.send_message(user_id, "Here are your available tasks:", reply_markup=task_keyboard)
+    if len(tasks) == len(user_data[user_id]["tasks_completed"]):
+        bot.send_message(user_id, "You have already completed all tasks!")
+    else:
+        total_credits = 0
+        for task_id, task_info in tasks.items():
+            if task_id not in user_data[user_id]["tasks_completed"]:
+                total_credits += task_info["credits"]
+                user_data[user_id]["tasks_completed"].add(task_id)
+        user_data[user_id]["credits"] += total_credits
+        bot.send_message(user_id, f"You completed all tasks and earned {total_credits} credits! Your total balance is: {user_data[user_id]['credits']} credits.")
 
 @bot.message_handler(func=lambda message: message.text == "Buy Proxy")
 def buy_proxy(message):
@@ -186,6 +174,7 @@ def process_new_proxy_info(message):
             bot.send_message(user_id, "Invalid price. Please enter a number.")
 
 # Admin Commands
+
 @bot.message_handler(commands=['show_users'])
 def show_users(message):
     user_id = message.from_user.id
@@ -219,6 +208,7 @@ def show_total_users(message):
     else:
         bot.send_message(user_id, "You are not authorized to use this command.")
 
+# Main loop to start the bot
 def main():
     bot.polling(none_stop=True)
 
