@@ -36,7 +36,7 @@ proxy_add_state = {}
 
 def create_main_keyboard():
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    keyboard.add("Add 👤 Account", "💌 Invite", "Add Balance", "Income Credits✅", "Buy Proxy", "Daily Claim", "Show Task", "/premium")
+    keyboard.add("Add 👤 Account", "💌 Invite", "Add Balance", "", "Buy Proxy", "Daily Claim", "Show Task", "/premium")
     return keyboard
 
 def create_proxy_keyboard():
